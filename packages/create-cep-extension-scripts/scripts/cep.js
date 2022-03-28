@@ -63,6 +63,19 @@ function printErrors(summary, errors) {
   });
 }
 
+var makeSymlink = function (dist, dest) {
+  try {
+    if (fs.existsSync(dest)) {
+      fs.unlinkSync(dest);
+    }
+    fs.symlinkSync(dist, dest, "junction");
+    return [true, dest];
+  }
+  catch (e) {
+    return [false, e];
+  }
+};
+
 function copyPublicFolder() {
   fs.copySync(paths.appPublic, paths.appBuild, {
     dereference: true,
@@ -77,9 +90,7 @@ function copyExtendscriptFolder() {
 }
 
 function symlinkExtendscriptFolder() {
-  const dest = paths.appBuild + '/extendscript';
-  // fs.removeSync(dest)
-  require('fs').symlinkSync(paths.appExtendscriptSrc, dest);
+  makeSymlink(paths.appExtendscriptSrc, paths.appBuild + '/extendscript');
 }
 
 function enablePlayerDebugMode() {
@@ -244,7 +255,7 @@ function symlinkExtension() {
   let target = getSymlinkExtensionPath();
   fs.removeSync(target);
   if (process.platform === 'win32') {
-    fs.symlinkSync(paths.appBuild, target, 'junction');
+    makeSymlink(paths.appBuild, target);
   } else {
     fs.symlinkSync(paths.appBuild, target);
   }
@@ -257,7 +268,7 @@ function printCEPExtensionLocation() {
 function printCEPLogLocation() {
   let logLocation;
   if (process.platform === 'win32') {
-    logLocation = path.join(process.env.HOME, 'AppDataLocalTemp');
+    logLocation = path.join(process.env.USERPROFILE, 'AppDataLocalTemp');
   } else {
     logLocation = path.join(process.env.HOME, 'Library/Logs/CSXS');
   }
